@@ -1,2 +1,2 @@
-# data-engineering
-Practice data engineering tools and technologies (DataLearn community learning project)
+# data-engineering-toolkit
+Practice data engineering tools and technologies
