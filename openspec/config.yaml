@@ -1,0 +1,35 @@
+schema: spec-driven
+
+context: |
+  Purpose: submission for the GLS/NXT Senior Data Engineer technical assessment
+  (brief: docs/data-engineer-assessment.md).
+
+  Primary deliverable is the assessment's own: an architecture diagram plus a
+  written proposal (Markdown rendered to PDF). A working local prototype is the
+  secondary deliverable, present to make the proposal defensible -
+  every code snippet in the proposal is real, runnable code from this repo.
+
+  Audience: GLS/NXT engineering leads. Solutions must be sized for a small data
+  team, not for a large platform org. Pragmatism over completeness.
+
+  Tech stack (local prototype): Python 3.13 + uv, dlt (ingestion), DuckDB
+  (warehouse-agnostic local stand-in), dbt Core, marimo (analytics surface),
+  just (operator CLI), pandoc + typst (Markdown to PDF).
+
+  Target stack (proposed, not built): BigQuery as the DWH, Airflow
+  orchestration, dbt transformations, Looker serving. DuckDB provides the
+  credential-free local execution target.
+
+  Domain model: parcel scan events shaped on GS1 EPCIS (what / when / where /
+  why - epc, eventTime, bizLocation, bizStep, disposition), with UPU S10 parcel
+  identifiers. Kimball dimensional model over those events.
+
+  Reference canon: Reis (lifecycle and undercurrents) frames the architecture;
+  Kimball (grain, conformed dimensions, fact types) governs the warehouse model;
+  Kleppmann (schema evolution, delivery semantics, batch vs stream) governs the
+  pipeline boundaries. FPF supplies bounded contexts and multi-view framing.
+
+rules:
+  proposal:
+    - State trade-offs as decisions with criteria and a reversal condition
+    - Size every recommendation for a small data team

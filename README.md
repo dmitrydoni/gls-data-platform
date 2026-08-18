@@ -10,7 +10,7 @@ backed by an executable local prototype.
 | [`docs/proposal.pdf`](docs/proposal.pdf) | Standalone technical specification |
 | [`analytics/service_performance.py`](analytics/service_performance.py) | Live operator and presentation interface |
 | [`analytics/service_performance.html`](analytics/service_performance.html) | Static notebook snapshot |
-| [`openspec/changes/gls-assessment-submission/`](openspec/changes/gls-assessment-submission/) | Requirements, decisions, tasks, and verification record |
+| [`openspec/`](openspec/) | Requirements, decisions, tasks, and verification record |
 
 The README, proposal, and notebook follow the same path: platform intent,
 functional architecture, Tasks 1 through 5, then executed prototype and limits.
