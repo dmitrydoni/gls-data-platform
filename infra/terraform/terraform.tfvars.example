@@ -1,0 +1,4 @@
+project_id    = "gls-nxt-data-dev"
+region        = "europe-west3"
+environment   = "dev"
+analyst_group = "data-analysts@gls-nxt.example"
