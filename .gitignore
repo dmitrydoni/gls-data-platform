@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+.pytest_cache/
+data/*.duckdb
+data/raw/
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/.user.yml
+analytics/__marimo__/
+.dlt/secrets.toml
+# Provider binaries run to hundreds of megabytes; the lock file is the artifact
+# that belongs in review.
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+infra/terraform/terraform.tfvars

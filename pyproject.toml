@@ -1,0 +1,41 @@
+[project]
+name = "gls-data-platform"
+version = "0.1.0"
+description = "GLS/NXT parcel analytics platform prototype"
+readme = "README.md"
+authors = [
+    { name = "Dmitry Doni", email = "dmitry.doni@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "dlt[duckdb]>=1.23.0",
+    "requests>=2.32.5",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "dbt-core>=1.10.0",
+    "dbt-duckdb>=1.9.0",
+    "duckdb>=1.1.0",
+    "marimo>=0.20.4",
+    "numpy>=2.5.2",
+    "plotly>=6.0.0",
+    "polars>=1.20.0",
+    "pyarrow>=25.0.1",
+    "pytest>=9.0.2",
+    "ruff>=0.15.5",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint.per-file-ignores]
+# marimo notebooks are generated: a bare trailing expression is how a cell
+# declares its output, and the empty `return` is written by marimo itself.
+"analytics/*.py" = ["B018", "PLR1711"]
+# dlt reads configuration from the argument default; that is the documented
+# pattern for `dlt.sources.incremental` and `dlt.config.value`.
+"src/sources/*.py" = ["B008"]

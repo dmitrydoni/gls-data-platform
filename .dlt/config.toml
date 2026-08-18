@@ -1,0 +1,11 @@
+[runtime]
+log_level = "WARNING"
+
+[pipeline]
+destination = "duckdb"
+duckdb_path = "data/gls_platform.duckdb"
+pipeline_name = "load__tracking_raw"
+dataset_name = "raw"
+
+[sources.tracking]
+api_base_url = "http://127.0.0.1:8420"

@@ -1,0 +1,85 @@
+# Markdown lint configuration for the authored documents in this repository.
+#
+# MD025 assumes a single H1 per document. `docs/proposal.md` is a pandoc source
+# whose title comes from YAML frontmatter, so its major sections are correctly
+# level 1. mado 0.3.1 cannot disable one rule, so the allowlist is restated here
+# minus MD025.
+
+[lint]
+respect-ignore = true
+respect-gitignore = true
+output-format = "concise"
+quiet = false
+# OpenSpec spec files carry OpenSpec's own layout — a heading followed
+# immediately by its text — which MD022 reads as a violation. `openspec/specs/`
+# and archived changes are generated; delta specs under a change are written to
+# a format `openspec validate` enforces. Proposals, designs and task lists are
+# free prose and stay linted.
+exclude = [
+  "**/openspec/specs/**",
+  "**/openspec/changes/**/specs/**",
+  "**/openspec/changes/archive/**",
+]
+rules = [
+  "MD001",
+  "MD004",
+  "MD005",
+  "MD006",
+  "MD009",
+  "MD010",
+  "MD012",
+  "MD014",
+  "MD018",
+  "MD019",
+  "MD021",
+  "MD022",
+  "MD023",
+  "MD024",
+  "MD026",
+  "MD028",
+  "MD029",
+  "MD030",
+  "MD031",
+  "MD033",
+  "MD034",
+  "MD035",
+  "MD036",
+  "MD037",
+  "MD038",
+  "MD039",
+  "MD040",
+  "MD046",
+  "MD047",
+]
+
+[lint.md004]
+style = "dash"
+
+[lint.md024]
+allow-different-nesting = true
+
+# `?` is a legitimate heading ending in Q&A and research notes.
+[lint.md026]
+punctuation = ".,;:!"
+
+# Ordered lists in these documents number sequentially rather than repeating `1.`.
+[lint.md029]
+style = "ordered"
+
+[lint.md030]
+ul-single = 1
+ol-single = 1
+ul-multi = 1
+ol-multi = 1
+
+[lint.md033]
+allowed-elements = []
+
+[lint.md035]
+style = "consistent"
+
+[lint.md036]
+punctuation = ".,;:!?"
+
+[lint.md046]
+style = "fenced"
