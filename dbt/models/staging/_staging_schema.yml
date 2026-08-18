@@ -1,0 +1,93 @@
+version: 2
+
+models:
+
+  - name: stg_tracking__scan_events
+    description: "{{ doc('stg__tracking__scan_events') }}"
+    columns:
+      - name: event_id
+        description: "{{ doc('tracking__event_id') }}"
+        data_tests: &primary_key
+          - unique
+          - not_null
+      - name: parcel_id
+        description: "{{ doc('tracking__parcel_id') }}"
+        data_tests:
+          - not_null
+      - name: event_ts
+        description: "{{ doc('tracking__event_ts') }}"
+        data_tests:
+          - not_null
+      - name: record_ts
+        description: "{{ doc('tracking__record_ts') }}"
+        data_tests:
+          - not_null
+      - name: biz_step
+        description: "{{ doc('tracking__biz_step') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['commissioning', 'receiving', 'departing', 'arriving',
+                       'shipping', 'delivering', 'holding']
+      - name: disposition
+        description: "{{ doc('tracking__disposition') }}"
+        data_tests:
+          - not_null
+      - name: location_gln
+        description: "{{ doc('tracking__location_gln') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tracking__locations')
+              field: location_gln
+
+  - name: stg_tracking__parcels
+    description: "{{ doc('stg__tracking__parcels') }}"
+    columns:
+      - name: parcel_id
+        description: "{{ doc('tracking__parcel_id') }}"
+        data_tests: *primary_key
+      - name: merchant_id
+        description: "{{ doc('tracking__merchant_id') }}"
+        data_tests:
+          - not_null
+      - name: service_level
+        description: "{{ doc('tracking__service_level') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['express', 'standard', 'economy']
+      - name: promised_delivery_ts
+        description: "{{ doc('tracking__promised_delivery_ts') }}"
+        data_tests:
+          - not_null
+      - name: weight_kg
+        description: "{{ doc('tracking__weight_kg') }}"
+
+  - name: stg_tracking__locations
+    description: "{{ doc('stg__tracking__locations') }}"
+    columns:
+      - name: location_gln
+        description: "{{ doc('tracking__location_gln') }}"
+        data_tests: *primary_key
+      - name: location_type
+        description: "{{ doc('tracking__location_type') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['depot', 'hub']
+
+  - name: stg_tracking__scan_events_quarantine
+    description: "{{ doc('stg__tracking__scan_events_quarantine') }}"
+    columns:
+      - name: quarantine_key
+        description: "{{ doc('tracking__quarantine_key') }}"
+        data_tests: *primary_key
+      - name: violation
+        description: "{{ doc('tracking__violation') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['missing_feed_offset', 'missing_event_id', 'missing_parcel_id',
+                       'missing_event_time', 'missing_record_time', 'missing_biz_step',
+                       'missing_disposition', 'missing_location_gln']

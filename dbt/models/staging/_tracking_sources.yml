@@ -1,0 +1,30 @@
+version: 2
+
+sources:
+  - name: tracking
+    description: "{{ doc('src__tracking') }}"
+    # The dataset dlt lands into. Both sides read it from one environment
+    # variable so a deployment cannot ingest into `raw_prod` and model `raw`.
+    schema: "{{ env_var('RAW_DATASET', 'raw') }}"
+    # Freshness is a question about arrival, not about occurrence. Measuring it
+    # on event_time would report a source as stale whenever a batch of genuinely
+    # old scans arrives, and fresh whenever the feed stops delivering new ones.
+    loaded_at_field: record_time
+    freshness:
+      warn_after: {count: 6, period: hour}
+      error_after: {count: 24, period: hour}
+    tables:
+      - name: scan_events
+        description: "{{ doc('src__tracking__scan_events') }}"
+      - name: scan_events_quarantine
+        description: "{{ doc('src__tracking__scan_events_quarantine') }}"
+        freshness: null
+        loaded_at_field: null
+      - name: parcels
+        description: "{{ doc('src__tracking__parcels') }}"
+        freshness: null
+        loaded_at_field: null
+      - name: locations
+        description: "{{ doc('src__tracking__locations') }}"
+        freshness: null
+        loaded_at_field: null

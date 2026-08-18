@@ -1,0 +1,175 @@
+version: 2
+
+models:
+
+  - name: dim_date
+    description: "{{ doc('core__dim_date') }}"
+    columns:
+      - name: date__sk
+        description: "{{ doc('core__date__sk') }}"
+        data_tests: &primary_key
+          - unique
+          - not_null
+      - name: date_day
+        description: "{{ doc('core__date_day') }}"
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_location
+    description: "{{ doc('core__dim_location') }}"
+    columns:
+      - name: location__sk
+        description: "{{ doc('core__location__sk') }}"
+        data_tests: *primary_key
+      - name: location_gln
+        description: "{{ doc('tracking__location_gln') }}"
+        data_tests:
+          - unique
+          - not_null
+      - name: is_hub
+        description: "{{ doc('core__is_hub') }}"
+
+  - name: dim_biz_step
+    description: "{{ doc('core__dim_biz_step') }}"
+    columns:
+      - name: biz_step__sk
+        description: "{{ doc('core__biz_step__sk') }}"
+        data_tests: *primary_key
+      - name: step_category
+        description: "{{ doc('core__step_category') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['origin', 'linehaul', 'delivery', 'exception']
+      - name: is_terminal
+        description: "{{ doc('core__is_terminal') }}"
+
+  - name: dim_merchant
+    description: "{{ doc('core__dim_merchant') }}"
+    columns:
+      - name: merchant__sk
+        description: "{{ doc('core__merchant__sk') }}"
+        data_tests: *primary_key
+      - name: merchant_tier
+        description: "{{ doc('core__merchant_tier') }}"
+        data_tests:
+          - accepted_values:
+              values: ['enterprise', 'mid_market', 'small_business']
+
+  - name: dim_parcel
+    description: "{{ doc('core__dim_parcel') }}"
+    columns:
+      - name: parcel__sk
+        description: "{{ doc('core__parcel__sk') }}"
+        data_tests: *primary_key
+      - name: merchant__fk
+        description: "{{ doc('core__merchant__fk') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_merchant')
+              field: merchant__sk
+      - name: destination_location__fk
+        description: "{{ doc('core__destination_location__fk') }}"
+        data_tests:
+          - relationships:
+              to: ref('dim_location')
+              field: location__sk
+      - name: parcel_id
+        description: "{{ doc('tracking__parcel_id') }}"
+        # A tracking number is a stable surrogate for a recipient, so it is
+        # personal data even though no name or address is stored beside it.
+        # Analysts read this dataset directly; the tag is what makes them read a
+        # hash of it. Terraform creates the taxonomy and the masking rule, dbt
+        # attaches it - the tag has to land on every column that carries the
+        # identifier or the policy is decoration.
+        policy_tags: &recipient_pseudonymous
+          - "{{ var('policy_tag_recipient_pseudonymous') }}"
+
+  - name: fct_parcel_scan
+    description: "{{ doc('core__fct_parcel_scan') }}"
+    columns:
+      - name: scan__sk
+        description: "{{ doc('core__scan__sk') }}"
+        data_tests: *primary_key
+      - name: parcel__fk
+        description: "{{ doc('core__parcel__fk') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_parcel')
+              field: parcel__sk
+      - name: location__fk
+        description: "{{ doc('core__location__fk') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location__sk
+      - name: biz_step__fk
+        description: "{{ doc('core__biz_step__fk') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_biz_step')
+              field: biz_step__sk
+      - name: date__fk
+        description: "{{ doc('core__date__fk') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date__sk
+      - name: event_ts
+        description: "{{ doc('tracking__event_ts') }}"
+        data_tests:
+          - not_null
+      - name: record_ts
+        description: "{{ doc('tracking__record_ts') }}"
+        data_tests:
+          - not_null
+      - name: capture_lag_hours
+        description: "{{ doc('core__capture_lag_hours') }}"
+      - name: parcel_id
+        description: "{{ doc('tracking__parcel_id') }}"
+        policy_tags: *recipient_pseudonymous
+
+  - name: fct_parcel_journey
+    description: "{{ doc('core__fct_parcel_journey') }}"
+    columns:
+      - name: journey__sk
+        description: "{{ doc('core__journey__sk') }}"
+        data_tests: *primary_key
+      - name: parcel__fk
+        description: "{{ doc('core__parcel__fk') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_parcel')
+              field: parcel__sk
+      - name: delivered_date__fk
+        description: "{{ doc('core__delivered_date__fk') }}"
+        data_tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date__sk
+      - name: parcel_id
+        description: "{{ doc('tracking__parcel_id') }}"
+        policy_tags: *recipient_pseudonymous
+      - name: total_transit_hours
+        description: "{{ doc('core__total_transit_hours') }}"
+      - name: hub_dwell_hours
+        description: "{{ doc('core__hub_dwell_hours') }}"
+      - name: delivery_attempts
+        description: "{{ doc('core__delivery_attempts') }}"
+        data_tests:
+          - not_null
+      - name: is_on_time
+        description: "{{ doc('core__is_on_time') }}"
+        data_tests:
+          - not_null
+      - name: is_first_attempt_success
+        description: "{{ doc('core__is_first_attempt_success') }}"
+        data_tests:
+          - not_null

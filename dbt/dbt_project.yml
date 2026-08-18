@@ -1,0 +1,77 @@
+name: 'gls_dwh'
+version: '1.0.0'
+
+profile: 'gls_dwh'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Fail the run before it writes anything, rather than after it publishes an
+# unmasked identifier or a key anyone can recompute. See `macros/utils/`.
+on-run-start:
+  - "{{ assert_policy_tag_configured() }}"
+  - "{{ assert_surrogate_key_salt_configured() }}"
+
+vars:
+  # The first event day the warehouse claims to hold. It is the scan fact's
+  # microbatch `begin`, the lower bound of a full journey rebuild, and the
+  # horizon the coverage test measures against - one value, because three
+  # copies of it drift and the disagreement is silent.
+  scan_history_begin: '2026-06-01'
+
+  # How far back a routine run rebuilds event days, sized to absorb a handheld
+  # that buffers over a long weekend. A scan that arrives later than this is not
+  # lost: `assert_scan_fact_covers_landed_events` fails the build, and the fix
+  # is the bounded backfill microbatch makes cheap (`just dwh-backfill`).
+  scan_capture_lookback_days: 7
+
+  # Share of a load package that may be quarantined before the contract counts
+  # as drifting. Enforced by `assert_quarantine_rate_within_bounds`.
+  max_quarantine_rate: 0.01
+
+  # Keys the surrogate-key hash, so a masked tracking number cannot be turned
+  # back into a joinable key by an analyst who knows one. Supplied from the
+  # deployment's secret manager; the default keeps a local build reproducible
+  # and `assert_surrogate_key_salt_configured()` keeps it local.
+  surrogate_key_salt: "{{ env_var('DBT_SURROGATE_KEY_SALT', 'gls-local-dev') }}"
+
+  # Resource name of the BigQuery policy tag, supplied from the Terraform output
+  # through the deployment environment - the same channel as the salt above, so
+  # one environment configures the whole run. Terraform creates the taxonomy and
+  # the masking rule; dbt owns the column schema, so dbt is what attaches a tag
+  # to a column - a taxonomy with nothing tagged masks nothing. Empty is correct
+  # on a warehouse without column-level access control and a build failure on
+  # one that has it; `assert_policy_tag_configured()` draws that line.
+  policy_tag_recipient_pseudonymous: "{{ env_var('DBT_POLICY_TAG', '') }}"
+
+models:
+  gls_dwh:
+    +persist_docs:
+      relation: true
+      columns: true
+
+    # Staging and core share one schema: they are the same trust boundary.
+    staging:
+      +schema: "core_{{ target.name }}"
+      +materialized: view
+      +tags: ['tracking']
+    core:
+      +schema: "core_{{ target.name }}"
+      +materialized: table
+      +tags: ['tracking']
+    marts:
+      +schema: "marts_{{ target.name }}"
+      +materialized: table
+
+seeds:
+  gls_dwh:
+    +schema: "seeds_{{ target.name }}"
+    +quote_columns: false

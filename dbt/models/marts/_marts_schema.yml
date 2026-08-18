@@ -1,0 +1,39 @@
+version: 2
+
+models:
+
+  - name: mrt_service_performance_daily
+    description: "{{ doc('marts__mrt_service_performance_daily') }}"
+    columns:
+      - name: service_performance__sk
+        description: "{{ doc('marts__service_performance__sk') }}"
+        data_tests:
+          - unique
+          - not_null
+      - name: destination_location__fk
+        description: "{{ doc('core__destination_location__fk') }}"
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location__sk
+      - name: delivered_date
+        description: "{{ doc('marts__delivered_date') }}"
+        data_tests:
+          - not_null
+      - name: service_level
+        description: "{{ doc('tracking__service_level') }}"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['express', 'standard', 'economy']
+      - name: parcels_delivered
+        description: "{{ doc('marts__parcels_delivered') }}"
+        data_tests:
+          - not_null
+      - name: on_time_rate
+        description: "{{ doc('marts__on_time_rate') }}"
+      - name: first_attempt_rate
+        description: "{{ doc('marts__first_attempt_rate') }}"
+      - name: exception_rate
+        description: "{{ doc('marts__exception_rate') }}"

@@ -1,0 +1,9 @@
+biz_step,disposition,step_label,step_category,is_terminal,step_sequence
+commissioning,active,Label created,origin,false,10
+receiving,in_progress,Collected from merchant,origin,false,20
+departing,in_transit,Departed facility,linehaul,false,30
+arriving,in_transit,Arrived at facility,linehaul,false,40
+shipping,in_transit,Out for delivery,delivery,false,50
+holding,non_sellable_other,Delivery attempt failed,exception,false,55
+delivering,in_possession,Delivered,delivery,true,60
+holding,returned,Returned to sender,exception,true,70

@@ -1,0 +1,7 @@
+packages:
+  # For `date_spine`. A calendar spine is the one construct in this project with
+  # no portable spelling - DuckDB has `generate_series`, BigQuery
+  # `generate_date_array` - and resolving that per adapter is exactly what this
+  # package is for.
+  - package: dbt-labs/dbt_utils
+    version: [">=1.3.0", "<2.0.0"]
