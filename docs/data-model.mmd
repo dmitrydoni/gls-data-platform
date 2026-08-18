@@ -1,0 +1,73 @@
+erDiagram
+    DIM_PARCEL ||--o{ FCT_PARCEL_SCAN : parcel__fk
+    DIM_LOCATION ||--o{ FCT_PARCEL_SCAN : location__fk
+    DIM_BIZ_STEP ||--o{ FCT_PARCEL_SCAN : biz_step__fk
+    DIM_DATE ||--o{ FCT_PARCEL_SCAN : date__fk
+
+    DIM_PARCEL ||--|| FCT_PARCEL_JOURNEY : parcel__fk
+    DIM_MERCHANT ||--o{ FCT_PARCEL_JOURNEY : merchant__fk
+    DIM_LOCATION ||--o{ FCT_PARCEL_JOURNEY : destination__fk
+    DIM_DATE ||--o{ FCT_PARCEL_JOURNEY : delivered_date__fk
+
+    DIM_MERCHANT ||--o{ DIM_PARCEL : merchant__fk
+    FCT_PARCEL_JOURNEY ||--o{ MRT_SERVICE_PERFORMANCE_DAILY : "aggregates to"
+
+    FCT_PARCEL_SCAN {
+        string scan__sk PK "one scan event"
+        string parcel__fk FK
+        string location__fk FK
+        string biz_step__fk FK
+        string date__fk FK
+        timestamp event_ts "when it happened"
+        timestamp record_ts "when it arrived"
+        float capture_lag_hours
+    }
+
+    FCT_PARCEL_JOURNEY {
+        string journey__sk PK "one parcel"
+        string parcel__fk FK
+        string merchant__fk FK
+        timestamp collected_ts "milestone"
+        timestamp delivered_ts "milestone"
+        float total_transit_hours
+        float hub_dwell_hours
+        bool is_on_time
+    }
+
+    DIM_PARCEL {
+        string parcel__sk PK
+        string parcel_id "UPU S10"
+        string service_level
+        timestamp promised_delivery_ts
+    }
+
+    DIM_LOCATION {
+        string location__sk PK
+        string location_gln "GS1 GLN"
+        string location_type "depot or hub"
+    }
+
+    DIM_BIZ_STEP {
+        string biz_step__sk PK
+        string biz_step "EPCIS"
+        string disposition "EPCIS"
+        bool is_terminal
+    }
+
+    DIM_MERCHANT {
+        string merchant__sk PK
+        string merchant_id
+        string merchant_tier
+    }
+
+    DIM_DATE {
+        string date__sk PK
+        date date_day
+    }
+
+    MRT_SERVICE_PERFORMANCE_DAILY {
+        string service_performance__sk PK "date x depot x service"
+        int parcels_delivered "additive"
+        int parcels_on_time "additive"
+        float on_time_rate "non-additive"
+    }

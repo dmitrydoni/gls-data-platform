@@ -1,0 +1,111 @@
+// Star schema for the GLS/NXT parcel warehouse, in DBML.
+//
+// A portable second expression of the model in docs/data-model.mmd. Validate
+// locally with `just docs-dbml`; paste into dbdiagram.io for an interactive
+// view. The dbdiagram CLI is a client for that hosted service - it pushes and
+// validates but does not render offline - so the diagram that ships in the PDF
+// is rendered from the Mermaid source instead.
+
+Project gls_parcel_warehouse {
+  database_type: 'BigQuery'
+  Note: 'Kimball star over GS1 EPCIS parcel scan events'
+}
+
+Table fct_parcel_scan {
+  scan__sk varchar [pk, note: 'grain: one parcel scan event']
+  parcel__fk varchar [not null, ref: > dim_parcel.parcel__sk]
+  location__fk varchar [not null, ref: > dim_location.location__sk]
+  biz_step__fk varchar [not null, ref: > dim_biz_step.biz_step__sk]
+  date__fk varchar [not null, ref: > dim_date.date__sk]
+  event_id varchar [note: 'degenerate dimension']
+  event_ts timestamp [note: 'when the scan happened']
+  event_date date [note: 'partition key, batch key']
+  record_ts timestamp [note: 'when the service accepted it; the loader cursor']
+  capture_lag_hours float
+
+  Note: 'Transaction fact. Microbatched by event_date, clustered by parcel_id.'
+}
+
+Table fct_parcel_journey {
+  journey__sk varchar [pk, note: 'grain: one parcel']
+  parcel__fk varchar [not null, unique, ref: - dim_parcel.parcel__sk]
+  merchant__fk varchar [not null, ref: > dim_merchant.merchant__sk]
+  destination_location__fk varchar [not null, ref: > dim_location.location__sk]
+  delivered_date__fk varchar [ref: >? dim_date.date__sk, note: 'null while in flight']
+  collected_ts timestamp [note: 'milestone']
+  hub_arrival_ts timestamp [note: 'milestone']
+  hub_departure_ts timestamp [note: 'milestone']
+  out_for_delivery_ts timestamp [note: 'milestone']
+  delivered_ts timestamp [note: 'milestone']
+  total_transit_hours float
+  hub_dwell_hours float
+  delivery_attempts int
+  is_on_time boolean
+  is_first_attempt_success boolean
+
+  Note: 'Accumulating snapshot. Row created at label scan, revisited per milestone.'
+}
+
+Table dim_parcel {
+  parcel__sk varchar [pk]
+  parcel_id varchar [unique, note: 'UPU S10']
+  merchant__fk varchar [not null, ref: > dim_merchant.merchant__sk]
+  service_level varchar
+  weight_kg float
+  weight_band varchar
+  promised_delivery_ts timestamp
+}
+
+Table dim_location {
+  location__sk varchar [pk]
+  location_gln varchar [unique, note: 'GS1 GLN']
+  location_name varchar
+  location_type varchar [note: 'depot | hub']
+  city varchar
+  country varchar
+  is_hub boolean
+}
+
+Table dim_biz_step {
+  biz_step__sk varchar [pk, note: 'grain: (biz_step, disposition)']
+  biz_step varchar [note: 'EPCIS bizStep']
+  disposition varchar [note: 'EPCIS disposition']
+  step_label varchar
+  step_category varchar
+  is_terminal boolean
+  step_sequence int
+
+  Note: 'Keyed on the pair: holding+non_sellable_other is a failed attempt, holding+returned is a return.'
+}
+
+Table dim_merchant {
+  merchant__sk varchar [pk]
+  merchant_id varchar [unique]
+  merchant_name varchar
+  merchant_segment varchar
+  merchant_tier varchar
+}
+
+Table dim_date {
+  date__sk varchar [pk]
+  date_day date [unique]
+  calendar_year int
+  calendar_quarter int
+  calendar_month int
+  calendar_week int
+  is_weekend boolean
+}
+
+Table mrt_service_performance_daily {
+  service_performance__sk varchar [pk, note: 'grain: date x depot x service level']
+  delivered_date__fk varchar [not null, ref: > dim_date.date__sk]
+  destination_location__fk varchar [not null, ref: > dim_location.location__sk]
+  delivered_date date
+  service_level varchar
+  parcels_delivered int [note: 'additive']
+  parcels_on_time int [note: 'additive']
+  parcels_first_attempt int [note: 'additive']
+  on_time_rate float [note: 'non-additive: recompute from counts when rolling up']
+  first_attempt_rate float [note: 'non-additive']
+  exception_rate float [note: 'non-additive']
+}

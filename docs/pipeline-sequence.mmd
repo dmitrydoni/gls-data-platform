@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    participant A as Airflow
+    participant S as Tracking API
+    participant I as dlt ingestion
+    participant W as BigQuery warehouse
+    participant D as dbt
+
+    A->>I: Start hourly load
+    I->>S: GET scan-events?since_offset=feedOffset
+    loop Paginated feed
+        S-->>I: Events + transport offsets
+        alt Contract-valid record
+            I->>W: MERGE valid row by event_id
+        else Contract violation
+            I->>W: MERGE row into quarantine
+        end
+    end
+    I-->>A: Commit rows + extraction state
+    A->>D: Run freshness gate + dbt build
+    D->>W: Read raw, build core and marts
+    D->>W: Test contracts, grain, relationships and coverage
+
+    alt Gate or build fails
+        D-->>A: Fail with control + affected data
+        Note over A,D: Alert operator and repair or backfill
+    else Build passes
+        D-->>A: Publish successful run
+        Note over W,D: Governed marts are ready for serving
+    end

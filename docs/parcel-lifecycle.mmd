@@ -1,0 +1,24 @@
+stateDiagram-v2
+    direction LR
+
+    state "Label created" as Created
+    state "Collected" as Collected
+    state "Hub handling" as Hub {
+        direction TB
+        [*] --> Arrived
+        Arrived --> Departed
+        Departed --> [*]
+    }
+    state "Destination depot" as Depot
+    state "Out for delivery" as Delivery
+
+    [*] --> Created: commissioning
+    Created --> Collected: receiving
+    Collected --> Hub: transport
+    Hub --> Depot: transport
+    Depot --> Delivery: shipping
+    Delivery --> Depot: next attempt
+    Delivery --> Delivered: delivered
+    Delivery --> Returned: attempts exhausted
+    Delivered --> [*]
+    Returned --> [*]

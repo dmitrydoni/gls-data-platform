@@ -1,0 +1,32 @@
+flowchart LR
+    sources["Operational sources<br/>Tracking services + Segment<br/>Kafka [conditional]"]
+
+    subgraph platform["System: GLS/NXT data platform / GCP"]
+        direction LR
+        airflow["Airflow<br/>Schedule + observe"]
+        ingest["dlt<br/>Load + contract"]
+        stream["Stream consumer<br/>Conditional"]
+        raw[("BigQuery raw<br/>Land + quarantine")]
+        dbt["dbt Core<br/>Model + test"]
+        marts[("BigQuery core + marts<br/>Conformed data products")]
+        looker["Looker<br/>Semantic layer"]
+
+        ingest --> raw --> dbt --> marts --> looker
+        stream --> raw
+        airflow -. "orchestrates" .-> ingest
+        airflow -. "orchestrates" .-> dbt
+    end
+
+    consumers["Consumers + systems<br/>Operations + data / ML<br/>Governed exports"]
+
+    sources --> ingest
+    sources -. "conditional" .-> stream
+    looker --> consumers
+    marts --> consumers
+
+    classDef container fill:#eef4fb,stroke:#1f5f8b,color:#16202a,stroke-width:1.5px;
+    classDef external fill:#f6f7f8,stroke:#7b8792,color:#16202a,stroke-width:1px;
+    classDef conditional fill:#f6f7f8,stroke:#5a6672,color:#16202a,stroke-width:1px,stroke-dasharray:5 4;
+    class airflow,ingest,raw,dbt,marts,looker container;
+    class sources,consumers external;
+    class stream conditional;
